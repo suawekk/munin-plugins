@@ -1,0 +1,28 @@
+#!/bin/bash
+
+DEFAULT_DATE_FORMAT='%d/%b/%Y'
+PREFIX=nginx_http_
+LOG=${logfile:-/var/log/nginx/access.log}
+DATE_FORMAT=${datefmt:-$DEFAULT_DATE_FORMAT}
+
+BASENAME=$(basename $0)
+CODE=${BASENAME/nginx_http_/}
+
+CODE_FIELD=${codefield_ind:-9}
+LABEL=${label:-http_$CODE}
+
+export LC_TIME=${lcctime:-C}
+
+
+if [[ $1 == 'config' ]]
+then
+    cat << EOD
+graph_title nginx status HTTP $CODE
+graph_vlabel $LABEL
+$LABEL.label status HTTP $CODE
+EOD
+else
+    TODAY=$(date +$DATE_FORMAT)
+    COUNT=$(grep $TODAY $LOG | awk "\$$CODE_FIELD==$CODE{ print }" | wc -l)
+    echo "$LABEL.value $COUNT"
+fi
